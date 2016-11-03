@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -108,6 +109,22 @@ final class Lambdas {
 
   public static String getMethodName(Serializable lambda) throws ObjectStreamException {
     return getLambdaOrThrow(lambda).getImplMethodName();
+  }
+
+  public static List<? extends Object> getCapturedArguments(Serializable lambda)
+      throws ObjectStreamException {
+    SerializedLambda actualLambda = getLambdaOrThrow(lambda);
+    return new AbstractList<Object>() {
+      @Override
+      public Object get(int index) {
+        return actualLambda.getCapturedArg(index);
+      }
+
+      @Override
+      public int size() {
+        return actualLambda.getCapturedArgCount();
+      }
+    };
   }
 
   private static SerializedLambda getLambdaOrThrow(Serializable lambda)

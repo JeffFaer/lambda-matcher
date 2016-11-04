@@ -34,56 +34,43 @@ public final class LambdaMatcher<T, R> extends TypeSafeDiagnosingMatcher<T> {
       Optional<? extends Object> capturedArgument =
           capturedArguments.isEmpty() ? Optional.empty() : Optional.of(capturedArguments.get(0));
 
-      String name = createName(capturedArgument, methodName, parameterType);
-      String description = createDescription(capturedArgument, parameterType, name);
+      String description = createDescription(capturedArgument, parameterType, methodName);
 
-      return new LambdaMatcher<>(parameterType, name, description, methodReference, matcher);
+      return new LambdaMatcher<>(parameterType, description, methodReference, matcher);
     } catch (ObjectStreamException | ClassNotFoundException e) {
       throw new AssertionError(e);
     }
-  }
-
-  private static String createName(Optional<? extends Object> capturedArgument,
-      String methodName,
-      Class<?> parameterType) {
-    return capturedArgument.map(arg -> {
-      StringBuilder name = new StringBuilder();
-      name.append(arg.getClass().getSimpleName());
-      name.append(" instance<").append(arg).append(">");
-      name.append(methodName).append("(").append(parameterType.getSimpleName()).append(")");
-      return name.toString();
-    }).orElseGet(() -> methodName + "()");
   }
 
   private static String createDescription(Optional<? extends Object> capturedArgument,
-      Class<?> parameterType,
-      String name) {
-    return capturedArgument.map(arg -> name)
-        .orElseGet(() -> parameterType.getSimpleName() + " with " + name);
+      Class<?> parameterType, String methodName) {
+    return capturedArgument.map(arg -> {
+      StringBuilder description = new StringBuilder();
+      description.append(arg.getClass().getSimpleName());
+      description.append(" instance<").append(arg).append(">");
+      description.append(methodName).append("(").append(parameterType.getSimpleName()).append(")");
+      return description.toString();
+    }).orElseGet(() -> parameterType.getSimpleName() + " with " + methodName + "()");
   }
 
   public static <T, R> Matcher<? super T> createMatcher(
-      SerializableFunction<? super T, ? extends R> lambda,
-      String name,
-      String description,
+      SerializableFunction<? super T, ? extends R> lambda, String description,
       Matcher<? super R> matcher) {
     try {
       Class<?> parameterType = Lambdas.getParameterTypes(lambda)[0];
-      return new LambdaMatcher<>(parameterType, name, description, lambda, matcher);
+      return new LambdaMatcher<>(parameterType, description, lambda, matcher);
     } catch (ObjectStreamException | ClassNotFoundException e) {
       throw new AssertionError(e);
     }
   }
 
-  private final String name;
   private final String description;
   private final Function<? super T, ? extends R> mapper;
   private final Matcher<? super R> delegate;
 
-  private LambdaMatcher(Class<?> expectedType, String name, String description,
+  private LambdaMatcher(Class<?> expectedType, String description,
       Function<? super T, ? extends R> mapper, Matcher<? super R> delegate) {
     super(expectedType);
-    this.name = name;
     this.description = description;
     this.mapper = mapper;
     this.delegate = delegate;
@@ -101,8 +88,8 @@ public final class LambdaMatcher<T, R> extends TypeSafeDiagnosingMatcher<T> {
       return true;
     }
 
-    mismatchDescription.appendText(name).appendText(" ");
     delegate.describeMismatch(value, mismatchDescription);
+    mismatchDescription.appendText(":\n").appendValue(item);
     return false;
   }
 }

@@ -27,7 +27,7 @@ public class LambdaMatcherTest {
     Description mismatch = new StringDescription();
     hasMessage("abcd").describeMismatch(t, mismatch);
 
-    assertThat(mismatch.toString()).contains("getMessage");
+    assertThat(mismatch.toString()).contains("was \"foobar\"");
   }
 
   @Test

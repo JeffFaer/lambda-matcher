@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>name.falgout.jeffrey.testing</groupId>
   <artifactId>lambda-matcher</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.2.0</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -25,7 +25,7 @@
     <connection>scm:git:${project.url}.git</connection>
     <developerConnection>scm:git:git@github.com:JeffreyFalgout/lambda-matcher.git</developerConnection>
     <url>${project.url}</url>
-    <tag>HEAD</tag>
+    <tag>v0.2.0</tag>
   </scm>
   <issueManagement>
     <system>github</system>

@@ -71,20 +71,7 @@ final class Lambdas {
   public static Class<?>[] getParameterTypes(Serializable lambda, ClassLoader classLoader)
       throws ObjectStreamException, ClassNotFoundException {
     SerializedLambda actualLambda = getLambdaOrThrow(lambda);
-    String methodSignature = actualLambda.getInstantiatedMethodType();
-
-    Matcher matcher = PARAMETER_LIST_PATTERN.matcher(methodSignature);
-    matcher.find();
-
-    String parameters = matcher.group("parameters");
-    List<String> parameterClassNames = new ArrayList<>();
-    matcher = SINGLE_PARAMETER_PATTERN.matcher(parameters);
-    int findIndex = 0;
-    while (matcher.find(findIndex)) {
-      parameterClassNames.add(parameters.substring(findIndex, matcher.end()).replace('/', '.'));
-
-      findIndex = matcher.end();
-    }
+    List<String> parameterClassNames = getParameterClassNames(actualLambda);
 
     Class<?>[] parameterTypes = new Class<?>[parameterClassNames.size()];
     for (int i = 0; i < parameterTypes.length; i++) {
@@ -105,6 +92,42 @@ final class Lambdas {
     }
 
     return parameterTypes;
+  }
+
+  /**
+   * Splits the String from {@link #getParameterTypesString} into its constituent parts. This method
+   * also replaces '/' with '.'.
+   */
+  private static List<String> getParameterClassNames(SerializedLambda actualLambda) {
+    String parameters = getParameterTypesString(actualLambda);
+    Matcher matcher = SINGLE_PARAMETER_PATTERN.matcher(parameters);
+
+    List<String> parameterClassNames = new ArrayList<>();
+    for (int findIndex = 0; matcher.find(findIndex); findIndex = matcher.end()) {
+      // Don't use matcher.group(). It will miss any array information. [[Ljava/lang/Object; would
+      // only match Ljava/lang/Object;
+      parameterClassNames.add(parameters.substring(findIndex, matcher.end()).replace('/', '.'));
+    }
+
+    return parameterClassNames;
+  }
+
+  /**
+   * Returns a String of the form (PRIMITIVE|CLASS|ARRAY)*
+   * <p>
+   * PRIMITIVE = [ZBCSIJFD]
+   * <p>
+   * CLASS = L[^;]+;
+   * <p>
+   * ARRAY = \[+(PRIMITIVE|CLASS)
+   */
+  private static String getParameterTypesString(SerializedLambda actualLambda) {
+    String methodSignature = actualLambda.getInstantiatedMethodType();
+
+    Matcher matcher = PARAMETER_LIST_PATTERN.matcher(methodSignature);
+    matcher.find();
+
+    return matcher.group("parameters");
   }
 
   public static String getMethodName(Serializable lambda) throws ObjectStreamException {
